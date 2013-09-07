@@ -1,0 +1,5 @@
+##
+## Arch Linux MIPS repository mirrorlist
+##
+
+Server = http://home.paulburton.eu/archlinux/$repo/os/$arch

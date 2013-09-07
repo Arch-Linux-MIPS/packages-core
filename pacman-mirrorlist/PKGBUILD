@@ -1,0 +1,17 @@
+# Maintainer: Paul Burton <paulburton89@gmail.com>
+pkgname=pacman-mirrorlist
+pkgver=20130907
+pkgrel=1
+pkgdesc="Arch Linux MIPS mirror list for use by pacman"
+arch=('any')
+url="http://www.archlinux.org/mirrorlist/"
+license=('GPL')
+backup=(etc/pacman.d/mirrorlist)
+source=(mirrorlist)
+
+package() {
+  mkdir -p $pkgdir/etc/pacman.d
+  install -m644 $srcdir/mirrorlist $pkgdir/etc/pacman.d/
+}
+
+sha256sums=('2d195f587a67f5e34ce2aa83e4272deb834a48bdb7752d21393bfa8f1aee1031')
