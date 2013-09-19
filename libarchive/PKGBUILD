@@ -1,0 +1,51 @@
+# $Id: PKGBUILD 193605 2013-08-25 14:43:38Z dreisner $
+# Maintainer: Dan McGee <dan@archlinux.org>
+
+pkgname=libarchive
+pkgver=3.1.2
+pkgrel=2.1
+pkgdesc="library that can create and read several streaming archive formats"
+arch=('i686' 'x86_64')
+url="http://libarchive.org/"
+license=('BSD')
+depends=('acl' 'attr' 'bzip2' 'expat' 'lzo2' 'openssl' 'xz' 'zlib')
+provides=('libarchive.so')
+source=("http://libarchive.org/downloads/$pkgname-$pkgver.tar.gz"
+        '0001-mtree-fix-line-filename-length-calculation.patch'
+        'libarchive-3.1.2-acl.patch'
+        'libarchive-3.1.2-lztestfix.patch')
+md5sums=('efad5a503f66329bb9d2f4308b5de98a'
+         'fda89c145bbcd793a96b06b463ef6a72'
+         'a5c995661c62429ceff2c23ea322393b'
+         '0d7318fe247fca1b2e074b197d217442')
+
+build() {
+  cd "$pkgname-$pkgver"
+
+  # https://code.google.com/p/libarchive/issues/detail?id=301
+  # upstream commit e65bf287f0133426b26611fe3e80b51267987106
+  patch -Np1 -i "$srcdir/0001-mtree-fix-line-filename-length-calculation.patch"
+
+  # https://code.google.com/p/libarchive/issues/detail?id=303
+  # upstream commit 26629c191a9e938e5952b4f926f4b29d2a52d5d7
+  patch -Np1 -i "$srcdir/libarchive-3.1.2-lztestfix.patch"
+
+  # https://code.google.com/p/libarchive/issues/detail?id=329
+  patch -Np1 -i "$srcdir/libarchive-3.1.2-acl.patch"
+
+  ./configure --prefix=/usr --without-xml2
+  make
+}
+
+check() {
+  cd "$pkgname-$pkgver"
+
+  make check
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+  make DESTDIR="$pkgdir" install
+
+  install -D -m644 COPYING "$pkgdir"/usr/share/licenses/libarchive/COPYING
+}
