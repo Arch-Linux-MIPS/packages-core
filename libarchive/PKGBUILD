@@ -1,21 +1,24 @@
-# $Id: PKGBUILD 193605 2013-08-25 14:43:38Z dreisner $
+# $Id: PKGBUILD 201474 2013-12-12 15:40:49Z dreisner $
 # Maintainer: Dan McGee <dan@archlinux.org>
 
 pkgname=libarchive
 pkgver=3.1.2
-pkgrel=2.1
+pkgrel=4
 pkgdesc="library that can create and read several streaming archive formats"
 arch=('i686' 'x86_64')
 url="http://libarchive.org/"
 license=('BSD')
 depends=('acl' 'attr' 'bzip2' 'expat' 'lzo2' 'openssl' 'xz' 'zlib')
+options=('strip' 'debug' 'libtool')
 provides=('libarchive.so')
 source=("http://libarchive.org/downloads/$pkgname-$pkgver.tar.gz"
         '0001-mtree-fix-line-filename-length-calculation.patch'
+        https://github.com/libarchive/libarchive/commit/22531545514043e04633e1c015c7540b9de9dbe4.patch
         'libarchive-3.1.2-acl.patch'
         'libarchive-3.1.2-lztestfix.patch')
 md5sums=('efad5a503f66329bb9d2f4308b5de98a'
          'fda89c145bbcd793a96b06b463ef6a72'
+         '6a63086b1a2e540d74ca6dc240dbd021'
          'a5c995661c62429ceff2c23ea322393b'
          '0d7318fe247fca1b2e074b197d217442')
 
@@ -32,6 +35,9 @@ build() {
 
   # https://code.google.com/p/libarchive/issues/detail?id=329
   patch -Np1 -i "$srcdir/libarchive-3.1.2-acl.patch"
+
+  # CVE-2013-0211
+  patch -Np1 -i "$srcdir/22531545514043e04633e1c015c7540b9de9dbe4.patch"
 
   ./configure --prefix=/usr --without-xml2
   make
