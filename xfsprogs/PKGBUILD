@@ -1,0 +1,35 @@
+# $Id: PKGBUILD 197846 2013-10-30 11:07:35Z allan $
+#
+pkgname=xfsprogs
+pkgver=3.1.11
+pkgrel=2.1
+pkgdesc="XFS filesystem utilities"
+arch=('i686' 'x86_64')
+license=('LGPL')
+url="http://oss.sgi.com/projects/xfs/"
+groups=('base')
+depends=('util-linux')
+options=('!makeflags')
+# We mirror the sources as upstream tends to move them once a new release is out
+source=("ftp://ftp.archlinux.org/other/xfsprogs/${pkgname}-${pkgver}.tar.gz")
+md5sums=('de9f1f45026c2f4e0776058d429ff4b6')
+
+build() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+  OPTARCH="${CARCH/_/-}"
+  [ "${OPTARCH}" != "mips32r2el" ] || OPTARCH="mips32r2"
+  export OPTIMIZER="-march=${OPTARCH} -O1"
+  export DEBUG=-DNDEBUG
+  ./configure --prefix=/usr --sbindir=/usr/bin
+  make
+}
+
+package() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+  make DIST_ROOT="${pkgdir}" PKG_ROOT_SBIN_DIR="/usr/bin" install install-dev
+  chown -R root $pkgdir
+  chgrp -R root $pkgdir
+  # add hack as we cannot set rootlibdir
+  mv "${pkgdir}"/lib/libhandle.so* "${pkgdir}/usr/lib/"
+  rm -rf "${pkgdir}/lib"
+}
