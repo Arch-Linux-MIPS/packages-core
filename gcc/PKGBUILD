@@ -7,13 +7,13 @@
 pkgname=('gcc' 'gcc-libs' 'gcc-fortran' 'gcc-objc' 'gcc-ada' 'gcc-go')
 pkgver=4.8.2
 _pkgver=4.8
-pkgrel=7.2
+pkgrel=7.3
 _snapshot=4.8-20131219
 pkgdesc="The GNU Compiler Collection"
 arch=('i686' 'x86_64')
 license=('GPL' 'LGPL' 'FDL' 'custom')
 url="http://gcc.gnu.org"
-makedepends=('binutils>=2.23' 'libmpc' 'cloog' 'gcc-ada' 'doxygen' 'linux-headers')
+makedepends=('binutils>=2.23' 'libmpc' 'cloog' 'gcc-ada' 'doxygen')
 checkdepends=('dejagnu' 'inetutils')
 options=('!emptydirs')
 source=(#ftp://gcc.gnu.org/pub/gcc/releases/gcc-${pkgver}/gcc-${pkgver}.tar.bz2
@@ -71,9 +71,6 @@ build() {
   hash_style=gnu
   [ "${CARCH}" != "mips32r2el" ] || hash_style="sysv"
 
-  sys=""
-  [ "${CARCH}" != "mips32r2el" ] || sys="--build=mips32el-unknown-linux-gnu --host=mips32el-unknown-linux-gnu --target=mips32el-unknown-linux-gnu"
-
   ${srcdir}/${_basedir}/configure --prefix=/usr \
       --libdir=/usr/lib --libexecdir=/usr/lib \
       --mandir=/usr/share/man --infodir=/usr/share/info \
@@ -88,7 +85,7 @@ build() {
       --enable-lto --enable-plugin --enable-install-libiberty \
       --with-linker-hash-style=${hash_style} \
       --disable-multilib --disable-werror \
-      --enable-checking=release ${sys}
+      --enable-checking=release
   make
   
   # make documentation
