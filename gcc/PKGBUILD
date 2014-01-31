@@ -7,13 +7,13 @@
 pkgname=('gcc' 'gcc-libs' 'gcc-fortran' 'gcc-objc' 'gcc-ada' 'gcc-go')
 pkgver=4.8.2
 _pkgver=4.8
-pkgrel=7.1
+pkgrel=7.2
 _snapshot=4.8-20131219
 pkgdesc="The GNU Compiler Collection"
 arch=('i686' 'x86_64')
 license=('GPL' 'LGPL' 'FDL' 'custom')
 url="http://gcc.gnu.org"
-makedepends=('binutils>=2.23' 'libmpc' 'cloog' 'gcc-ada' 'doxygen')
+makedepends=('binutils>=2.23' 'libmpc' 'cloog' 'gcc-ada' 'doxygen' 'linux-headers')
 checkdepends=('dejagnu' 'inetutils')
 options=('!emptydirs')
 source=(#ftp://gcc.gnu.org/pub/gcc/releases/gcc-${pkgver}/gcc-${pkgver}.tar.bz2
