@@ -3,7 +3,7 @@
 
 pkgname=kmod
 pkgver=16
-pkgrel=1
+pkgrel=1.1
 pkgdesc="Linux kernel module handling"
 arch=('i686' 'x86_64')
 url='http://git.kernel.org/?p=utils/kernel/kmod/kmod.git;a=summary'
@@ -31,7 +31,7 @@ build() {
 }
 
 check() {
-  make -C "$pkgname-$pkgver" check || echo "WARNING: tests failed, packaging anyway"
+  make -C "$pkgname-$pkgver" check || true
 }
 
 package() {
