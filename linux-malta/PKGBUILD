@@ -1,54 +1,50 @@
-# $Id: PKGBUILD 204910 2014-01-31 09:11:18Z thomas $
+# $Id: PKGBUILD 214051 2014-06-03 08:02:21Z tpowa $
 # Maintainer: Tobias Powalowski <tpowa@archlinux.org>
 # Maintainer: Thomas Baechler <thomas@archlinux.org>
 
 pkgbase=linux-malta         # Build stock -ARCH kernel
 #pkgbase=linux-custom       # Build kernel with a different name
-_srcname=linux-3.12
-pkgver=3.12.9
-pkgrel=2
+_srcname=linux-3.14
+pkgver=3.14.5
+pkgrel=1
 arch=('mips32r2el')
 url="http://www.kernel.org/"
 license=('GPL2')
-makedepends=('xmlto' 'docbook-xsl' 'kmod' 'inetutils' 'bc')
+makedepends=('xmlto' 'docbook-xsl' 'kmod' 'inetutils' 'bc' 'uboot-mkimage')
 options=('!strip')
-source=("http://www.kernel.org/pub/linux/kernel/v3.x/${_srcname}.tar.xz"
-        "http://www.kernel.org/pub/linux/kernel/v3.x/patch-${pkgver}.xz"
+source=("https://www.kernel.org/pub/linux/kernel/v3.x/${_srcname}.tar.xz"
+        "https://www.kernel.org/pub/linux/kernel/v3.x/patch-${pkgver}.xz"
         # the main kernel config files
         'config.malta_mips32r2el'
         # standard config files for mkinitcpio ramdisk
         'linux.preset'
         'change-default-console-loglevel.patch'
-        'criu-no-expert.patch'
-        'sunrpc-create-a-new-dummy-pipe-for-gssd-to-hold-open.patch'
-        'sunrpc-replace-gssd_running-with-more-reliable-check.patch'
-        'nfs-check-gssd-running-before-krb5i-auth.patch'
-        'rpc_pipe-remove-the-clntXX-dir-if-creating-the-pipe-fails.patch'
-        'sunrpc-add-an-info-file-for-the-dummy-gssd-pipe.patch'
-        'rpc_pipe-fix-cleanup-of-dummy-gssd-directory-when-notification-fails.patch'
-        '0001-x86-x32-Correct-invalid-use-of-user-timespec-in-the-.patch'
-)
-md5sums=('cc6ee608854e0da4b64f6c1ff8b6398c'
-         '0d539fc9bc799663caf0f383d9252d36'
-         '37cbac4030d23fe70460e3c7a60cc506'
-         'eb14dcfd80c00852ef81ded6e826826a'
-         '98beb36f9b8cf16e58de2483ea9985e3'
-         'd50c1ac47394e9aec637002ef3392bd1'
-         'd4a75f77e6bd5d700dcd534cd5f0dfce'
-         'dc86fdc37615c97f03c1e0c31b7b833a'
-         '88eef9d3b5012ef7e82af1af8cc4e517'
-         'cec0bb8981936eab2943b2009b7a6fff'
-         '88d9cddf9e0050a76ec4674f264fb2a1'
-         'cb9016630212ef07b168892fbcfd4e5d'
-         '336d2c4afd7ee5f2bdf0dcb1a54df4b2')
+        '0001-Bluetooth-allocate-static-minor-for-vhci.patch'
+        '0002-module-allow-multiple-calls-to-MODULE_DEVICE_TABLE-p.patch'
+        '0003-module-remove-MODULE_GENERIC_TABLE.patch'
+        '0005-Revert-Bluetooth-Enable-autosuspend-for-Intel-Blueto.patch'
+        '0006-genksyms-fix-typeof-handling.patch'
+        '0010-iwlwifi-mvm-delay-enabling-smart-FIFO-until-after-be.patch'
+        '0011-kernfs-fix-removed-error-check.patch'
+        '0012-fix-saa7134.patch'
+        '0015-fix-xsdt-validation.patch'
+        )
+sha256sums=('61558aa490855f42b6340d1a1596be47454909629327c49a5e4e10268065dffa'
+            'ecc00856830c05736b3f99609bc6d80353c29d2db9b0dffb91eb2d169808cac4'
+            '9deee7a315fe470cd6207d5bcd4cb519767938b58bc3d0aec8b23cbb83c13712'
+            'f0d90e756f14533ee67afda280500511a62465b4f76adcc5effa95a40045179c'
+            'faced4eb4c47c4eb1a9ee8a5bf8a7c4b49d6b4d78efbe426e410730e6267d182'
+            '6d72e14552df59e6310f16c176806c408355951724cd5b48a47bf01591b8be02'
+            '52dec83a8805a8642d74d764494acda863e0aa23e3d249e80d4b457e20a3fd29'
+            '65d58f63215ee3c5f9c4fc6bce36fc5311a6c7dbdbe1ad29de40647b47ff9c0d'
+            '3fffb01cf97a5a7ab9601cb277d2468c0fb1e1cceba4225915f3ffae3a5694ec'
+            'cf2e7a2d00787f754028e7459688c2755a406e632ce48b60952fa4ff7ed6f4b7'
+            'c0af4622f75c89fef62183e18b7d49998228d4eaa906c6accaf4aa4ff0134f85'
+            '04f44bf5c181d6dc31905937c1bdccb0f5aecaad3a579e99b302502b9cbe0f7a'
+            '79359454c9d8446eb55add2b1cdbf8332bd67dafb01fefb5b1ca090225f64d18'
+            '384dd13fd4248fd6809da8c6ae29ced55d4a5cacc33ac2ae7522093ec0fb26d4')
 
 _kernelname=${pkgbase#linux}
-
-# module.symbols md5sums
-# x86_64
-# b09c63a0b6a5d819c1de0e9933902e9b  /lib/modules/3.12.9-1-ARCH/modules.symbols
-# i686
-# fff24e378eada043f40a875551a8aeec  /lib/modules/3.12.9-1-ARCH/modules.symbols
 
 prepare() {
   cd "${srcdir}/${_srcname}"
@@ -62,25 +58,41 @@ prepare() {
   # set DEFAULT_CONSOLE_LOGLEVEL to 4 (same value as the 'quiet' kernel param)
   # remove this when a Kconfig knob is made available by upstream
   # (relevant patch sent upstream: https://lkml.org/lkml/2011/7/26/227)
-  patch -Np1 -i "${srcdir}/change-default-console-loglevel.patch"
+  patch -p1 -i "${srcdir}/change-default-console-loglevel.patch"
 
-  # allow criu without expert option set
-  # patch from fedora
-  patch -Np1 -i "${srcdir}/criu-no-expert.patch"
+  # Fix vhci warning in kmod (to restore every kernel maintainer's sanity)
+  patch -p1 -i "${srcdir}/0001-Bluetooth-allocate-static-minor-for-vhci.patch"
 
-  # fix 15 seocnds nfs delay
-  patch -Np1 -i "${srcdir}/sunrpc-create-a-new-dummy-pipe-for-gssd-to-hold-open.patch"
-  patch -Np1 -i "${srcdir}/sunrpc-replace-gssd_running-with-more-reliable-check.patch"
-  patch -Np1 -i "${srcdir}/nfs-check-gssd-running-before-krb5i-auth.patch"
-  # fix nfs kernel oops
-  # #37866
-  patch -Np1 -i "${srcdir}/rpc_pipe-remove-the-clntXX-dir-if-creating-the-pipe-fails.patch"
-  patch -Np1 -i "${srcdir}/sunrpc-add-an-info-file-for-the-dummy-gssd-pipe.patch"
+  # Fix atkbd aliases
+  patch -p1 -i "${srcdir}/0002-module-allow-multiple-calls-to-MODULE_DEVICE_TABLE-p.patch"
+  patch -p1 -i "${srcdir}/0003-module-remove-MODULE_GENERIC_TABLE.patch"
 
-  patch -Np1 -i "${srcdir}/rpc_pipe-fix-cleanup-of-dummy-gssd-directory-when-notification-fails.patch"
+  # Disable usb autosuspend for intel btusb
+  # See http://www.spinics.net/lists/kernel/msg1716461.html
+  # Until a solution is found, make sure the driver leaves autosuspend alone
+  patch -p1 -i "${srcdir}/0005-Revert-Bluetooth-Enable-autosuspend-for-Intel-Blueto.patch"
 
-  # Fix CVE-2014-0038
-  patch -p1 -i "${srcdir}/0001-x86-x32-Correct-invalid-use-of-user-timespec-in-the-.patch"
+  # Fix generation of symbol CRCs
+  # http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=dc53324060f324e8af6867f57bf4891c13c6ef18
+  patch -p1 -i "${srcdir}/0006-genksyms-fix-typeof-handling.patch"
+
+  # https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/iwlwifi-fixes.git/commit/?id=12f853a89e29f50b17698e17e73c328a35f1498d
+  # FS#39815
+  patch -p1 -i "${srcdir}/0010-iwlwifi-mvm-delay-enabling-smart-FIFO-until-after-be.patch"
+  
+  # fix Xorg crash with i810 chipset due to wrong removed error check
+  # References: http://lkml.kernel.org/g/533D01BD.1010200@googlemail.com
+  patch -Np1 -i "${srcdir}/0011-kernfs-fix-removed-error-check.patch"
+
+  # fix saa7134 video
+  # https://bugs.archlinux.org/task/39904
+  # https://bugzilla.kernel.org/show_bug.cgi?id=73361
+  patch -Np1 -i "${srcdir}/0012-fix-saa7134.patch"
+
+  # fix xsdt validation bug
+  # https://bugs.archlinux.org/task/39811
+  # https://bugzilla.kernel.org/show_bug.cgi?id=73911
+  patch -Np1 -i "${srcdir}/0015-fix-xsdt-validation.patch"
 
   cat "${srcdir}/config.malta_mips32r2el" > ./.config
 
@@ -94,10 +106,6 @@ prepare() {
 
   # don't run depmod on 'make install'. We'll do this ourselves in packaging
   sed -i '2iexit 0' scripts/depmod.sh
-}
-
-build() {
-  cd "${srcdir}/${_srcname}"
 
   # get kernel version
   make prepare
@@ -112,21 +120,12 @@ build() {
 
   # rewrite configuration
   yes "" | make config >/dev/null
+}
 
-  # save configuration for later reuse
-  cat .config > "${startdir}/config.mips32r2el.last"
+build() {
+  cd "${srcdir}/${_srcname}"
 
-  ####################
-  # stop here
-  # this is useful to configure the kernel
-  #msg "Stopping build"; return 1
-  ####################
-
-  # ld won't accept -Wl
-  export LDFLAGS=""
-
-  # build!
-  make ${MAKEFLAGS} LOCALVERSION= vmlinux.bin modules
+  make ${MAKEFLAGS} CFLAGS= LDFLAGS= LOCALVERSION= vmlinux.bin uImage modules
 }
 
 _package() {
@@ -151,10 +150,8 @@ _package() {
 
   mkdir -p "${pkgdir}"/{lib/modules,lib/firmware,boot}
   make LOCALVERSION= INSTALL_MOD_PATH="${pkgdir}" modules_install
-  cp arch/$KARCH/boot/vmlinux.bin "${pkgdir}/boot/vmlinux-${pkgbase}.bin"
-
-  # add vmlinux
-  install -D -m644 vmlinux "${pkgdir}/usr/src/linux-${_kernver}/vmlinux"
+  cp arch/$KARCH/boot/uImage "${pkgdir}/boot/vmlinux-malta.uImage"
+  cp arch/$KARCH/boot/vmlinux.bin "${pkgdir}/boot/vmlinux-malta.bin"
 
   # set correct depmod command for install
   cp -f "${startdir}/${install}" "${startdir}/${install}.pkg"
@@ -186,10 +183,14 @@ _package() {
   echo "${_kernver}" > "${pkgdir}/lib/modules/extramodules-${_basekernel}${_kernelname:--ARCH}/version"
 
   # Now we call depmod...
-  depmod -b "$pkgdir" -F System.map "$_kernver"
+  depmod -b "${pkgdir}" -F System.map "${_kernver}"
 
   # move module tree /lib -> /usr/lib
-  mv "$pkgdir/lib" "$pkgdir/usr"
+  mkdir -p "${pkgdir}/usr"
+  mv "${pkgdir}/lib" "${pkgdir}/usr/"
+
+  # add vmlinux
+  install -D -m644 vmlinux "${pkgdir}/usr/lib/modules/${_kernver}/build/vmlinux" 
 }
 
 _package-headers() {
@@ -200,124 +201,99 @@ _package-headers() {
 
   install -dm755 "${pkgdir}/usr/lib/modules/${_kernver}"
 
-  cd "${pkgdir}/usr/lib/modules/${_kernver}"
-  ln -sf ../../../src/linux-${_kernver} build
-
   cd "${srcdir}/${_srcname}"
   install -D -m644 Makefile \
-    "${pkgdir}/usr/src/linux-${_kernver}/Makefile"
+    "${pkgdir}/usr/lib/modules/${_kernver}/build/Makefile"
   install -D -m644 kernel/Makefile \
-    "${pkgdir}/usr/src/linux-${_kernver}/kernel/Makefile"
+    "${pkgdir}/usr/lib/modules/${_kernver}/build/kernel/Makefile"
   install -D -m644 .config \
-    "${pkgdir}/usr/src/linux-${_kernver}/.config"
+    "${pkgdir}/usr/lib/modules/${_kernver}/build/.config"
 
-  mkdir -p "${pkgdir}/usr/src/linux-${_kernver}/include"
+  mkdir -p "${pkgdir}/usr/lib/modules/${_kernver}/build/include"
 
   for i in acpi asm-generic config crypto drm generated keys linux math-emu \
     media net pcmcia scsi sound trace uapi video xen; do
-    cp -a include/${i} "${pkgdir}/usr/src/linux-${_kernver}/include/"
+    cp -a include/${i} "${pkgdir}/usr/lib/modules/${_kernver}/build/include/"
   done
 
   # copy arch includes for external modules
-  mkdir -p "${pkgdir}/usr/src/linux-${_kernver}/arch/mips"
-  cp -a arch/mips/include "${pkgdir}/usr/src/linux-${_kernver}/arch/mips/"
+  mkdir -p "${pkgdir}/usr/lib/modules/${_kernver}/build/arch/mips"
+  cp -a arch/mips/include "${pkgdir}/usr/lib/modules/${_kernver}/build/arch/mips/"
 
   # copy files necessary for later builds, like nvidia and vmware
-  cp Module.symvers "${pkgdir}/usr/src/linux-${_kernver}"
-  cp -a scripts "${pkgdir}/usr/src/linux-${_kernver}"
+  cp Module.symvers "${pkgdir}/usr/lib/modules/${_kernver}/build"
+  cp -a scripts "${pkgdir}/usr/lib/modules/${_kernver}/build"
 
   # fix permissions on scripts dir
-  chmod og-w -R "${pkgdir}/usr/src/linux-${_kernver}/scripts"
-  mkdir -p "${pkgdir}/usr/src/linux-${_kernver}/.tmp_versions"
+  chmod og-w -R "${pkgdir}/usr/lib/modules/${_kernver}/build/scripts"
+  mkdir -p "${pkgdir}/usr/lib/modules/${_kernver}/build/.tmp_versions"
 
-  mkdir -p "${pkgdir}/usr/src/linux-${_kernver}/arch/${KARCH}/kernel"
+  mkdir -p "${pkgdir}/usr/lib/modules/${_kernver}/build/arch/${KARCH}/kernel"
 
-  cp arch/${KARCH}/Makefile "${pkgdir}/usr/src/linux-${_kernver}/arch/${KARCH}/"
+  cp arch/${KARCH}/Makefile "${pkgdir}/usr/lib/modules/${_kernver}/build/arch/${KARCH}/"
 
-  if [ "${CARCH}" = "i686" ]; then
-    cp arch/${KARCH}/Makefile_32.cpu "${pkgdir}/usr/src/linux-${_kernver}/arch/${KARCH}/"
-  fi
-
-  cp arch/${KARCH}/kernel/asm-offsets.s "${pkgdir}/usr/src/linux-${_kernver}/arch/${KARCH}/kernel/"
-
-  # add headers for lirc package
-  # pci
-  for i in bt8xx cx88 saa7134; do
-    mkdir -p "${pkgdir}/usr/src/linux-${_kernver}/drivers/media/pci/${i}"
-    cp -a drivers/media/pci/${i}/*.h "${pkgdir}/usr/src/linux-${_kernver}/drivers/media/pci/${i}"
-  done
-  # usb
-  for i in cpia2 em28xx pwc sn9c102; do
-    mkdir -p "${pkgdir}/usr/src/linux-${_kernver}/drivers/media/usb/${i}"
-    cp -a drivers/media/usb/${i}/*.h "${pkgdir}/usr/src/linux-${_kernver}/drivers/media/usb/${i}"
-  done
-  # i2c
-  mkdir -p "${pkgdir}/usr/src/linux-${_kernver}/drivers/media/i2c"
-  cp drivers/media/i2c/*.h  "${pkgdir}/usr/src/linux-${_kernver}/drivers/media/i2c/"
-  for i in cx25840; do
-    mkdir -p "${pkgdir}/usr/src/linux-${_kernver}/drivers/media/i2c/${i}"
-    cp -a drivers/media/i2c/${i}/*.h "${pkgdir}/usr/src/linux-${_kernver}/drivers/media/i2c/${i}"
-  done
+  cp arch/${KARCH}/kernel/asm-offsets.s "${pkgdir}/usr/lib/modules/${_kernver}/build/arch/${KARCH}/kernel/"
 
   # add docbook makefile
   install -D -m644 Documentation/DocBook/Makefile \
-    "${pkgdir}/usr/src/linux-${_kernver}/Documentation/DocBook/Makefile"
+    "${pkgdir}/usr/lib/modules/${_kernver}/build/Documentation/DocBook/Makefile"
 
   # add dm headers
-  mkdir -p "${pkgdir}/usr/src/linux-${_kernver}/drivers/md"
-  cp drivers/md/*.h "${pkgdir}/usr/src/linux-${_kernver}/drivers/md"
+  mkdir -p "${pkgdir}/usr/lib/modules/${_kernver}/build/drivers/md"
+  cp drivers/md/*.h "${pkgdir}/usr/lib/modules/${_kernver}/build/drivers/md"
 
   # add inotify.h
-  mkdir -p "${pkgdir}/usr/src/linux-${_kernver}/include/linux"
-  cp include/linux/inotify.h "${pkgdir}/usr/src/linux-${_kernver}/include/linux/"
+  mkdir -p "${pkgdir}/usr/lib/modules/${_kernver}/build/include/linux"
+  cp include/linux/inotify.h "${pkgdir}/usr/lib/modules/${_kernver}/build/include/linux/"
 
   # add wireless headers
-  mkdir -p "${pkgdir}/usr/src/linux-${_kernver}/net/mac80211/"
-  cp net/mac80211/*.h "${pkgdir}/usr/src/linux-${_kernver}/net/mac80211/"
+  mkdir -p "${pkgdir}/usr/lib/modules/${_kernver}/build/net/mac80211/"
+  cp net/mac80211/*.h "${pkgdir}/usr/lib/modules/${_kernver}/build/net/mac80211/"
 
   # add dvb headers for external modules
   # in reference to:
   # http://bugs.archlinux.org/task/9912
-  mkdir -p "${pkgdir}/usr/src/linux-${_kernver}/drivers/media/dvb-core"
-  cp drivers/media/dvb-core/*.h "${pkgdir}/usr/src/linux-${_kernver}/drivers/media/dvb-core/"
+  mkdir -p "${pkgdir}/usr/lib/modules/${_kernver}/build/drivers/media/dvb-core"
+  cp drivers/media/dvb-core/*.h "${pkgdir}/usr/lib/modules/${_kernver}/build/drivers/media/dvb-core/"
   # and...
   # http://bugs.archlinux.org/task/11194
-  mkdir -p "${pkgdir}/usr/src/linux-${_kernver}/include/config/dvb/"
-  cp include/config/dvb/*.h "${pkgdir}/usr/src/linux-${_kernver}/include/config/dvb/"
+  mkdir -p "${pkgdir}/usr/lib/modules/${_kernver}/build/include/config/dvb/"
+  cp include/config/dvb/*.h "${pkgdir}/usr/lib/modules/${_kernver}/build/include/config/dvb/"
 
   # add dvb headers for http://mcentral.de/hg/~mrec/em28xx-new
   # in reference to:
   # http://bugs.archlinux.org/task/13146
-  mkdir -p "${pkgdir}/usr/src/linux-${_kernver}/drivers/media/dvb-frontends/"
-  cp drivers/media/dvb-frontends/lgdt330x.h "${pkgdir}/usr/src/linux-${_kernver}/drivers/media/dvb-frontends/"
-  cp drivers/media/i2c/msp3400-driver.h "${pkgdir}/usr/src/linux-${_kernver}/drivers/media/i2c/"
+  mkdir -p "${pkgdir}/usr/lib/modules/${_kernver}/build/drivers/media/dvb-frontends/"
+  cp drivers/media/dvb-frontends/lgdt330x.h "${pkgdir}/usr/lib/modules/${_kernver}/build/drivers/media/dvb-frontends/"
+  mkdir -p "${pkgdir}/usr/lib/modules/${_kernver}/build/drivers/media/i2c/"
+  cp drivers/media/i2c/msp3400-driver.h "${pkgdir}/usr/lib/modules/${_kernver}/build/drivers/media/i2c/"
 
   # add dvb headers
   # in reference to:
   # http://bugs.archlinux.org/task/20402
-  mkdir -p "${pkgdir}/usr/src/linux-${_kernver}/drivers/media/usb/dvb-usb"
-  cp drivers/media/usb/dvb-usb/*.h "${pkgdir}/usr/src/linux-${_kernver}/drivers/media/usb/dvb-usb/"
-  mkdir -p "${pkgdir}/usr/src/linux-${_kernver}/drivers/media/dvb-frontends"
-  cp drivers/media/dvb-frontends/*.h "${pkgdir}/usr/src/linux-${_kernver}/drivers/media/dvb-frontends/"
-  mkdir -p "${pkgdir}/usr/src/linux-${_kernver}/drivers/media/tuners"
-  cp drivers/media/tuners/*.h "${pkgdir}/usr/src/linux-${_kernver}/drivers/media/tuners/"
+  mkdir -p "${pkgdir}/usr/lib/modules/${_kernver}/build/drivers/media/usb/dvb-usb"
+  cp drivers/media/usb/dvb-usb/*.h "${pkgdir}/usr/lib/modules/${_kernver}/build/drivers/media/usb/dvb-usb/"
+  mkdir -p "${pkgdir}/usr/lib/modules/${_kernver}/build/drivers/media/dvb-frontends"
+  cp drivers/media/dvb-frontends/*.h "${pkgdir}/usr/lib/modules/${_kernver}/build/drivers/media/dvb-frontends/"
+  mkdir -p "${pkgdir}/usr/lib/modules/${_kernver}/build/drivers/media/tuners"
+  cp drivers/media/tuners/*.h "${pkgdir}/usr/lib/modules/${_kernver}/build/drivers/media/tuners/"
 
   # add xfs and shmem for aufs building
-  mkdir -p "${pkgdir}/usr/src/linux-${_kernver}/fs/xfs"
-  mkdir -p "${pkgdir}/usr/src/linux-${_kernver}/mm"
-  cp fs/xfs/xfs_sb.h "${pkgdir}/usr/src/linux-${_kernver}/fs/xfs/xfs_sb.h"
+  mkdir -p "${pkgdir}/usr/lib/modules/${_kernver}/build/fs/xfs"
+  mkdir -p "${pkgdir}/usr/lib/modules/${_kernver}/build/mm"
+  cp fs/xfs/xfs_sb.h "${pkgdir}/usr/lib/modules/${_kernver}/build/fs/xfs/xfs_sb.h"
 
   # copy in Kconfig files
-  for i in `find . -name "Kconfig*"`; do
-    mkdir -p "${pkgdir}"/usr/src/linux-${_kernver}/`echo ${i} | sed 's|/Kconfig.*||'`
-    cp ${i} "${pkgdir}/usr/src/linux-${_kernver}/${i}"
+  for i in $(find . -name "Kconfig*"); do
+    mkdir -p "${pkgdir}"/usr/lib/modules/${_kernver}/build/`echo ${i} | sed 's|/Kconfig.*||'`
+    cp ${i} "${pkgdir}/usr/lib/modules/${_kernver}/build/${i}"
   done
 
-  chown -R root.root "${pkgdir}/usr/src/linux-${_kernver}"
-  find "${pkgdir}/usr/src/linux-${_kernver}" -type d -exec chmod 755 {} \;
+  chown -R root.root "${pkgdir}/usr/lib/modules/${_kernver}/build"
+  find "${pkgdir}/usr/lib/modules/${_kernver}/build" -type d -exec chmod 755 {} \;
 
   # strip scripts directory
-  find "${pkgdir}/usr/src/linux-${_kernver}/scripts" -type f -perm -u+w 2>/dev/null | while read binary ; do
+  find "${pkgdir}/usr/lib/modules/${_kernver}/build/scripts" -type f -perm -u+w 2>/dev/null | while read binary ; do
     case "$(file -bi "${binary}")" in
       *application/x-sharedlib*) # Libraries (.so)
         /usr/bin/strip ${STRIP_SHARED} "${binary}";;
@@ -329,7 +305,7 @@ _package-headers() {
   done
 
   # remove unneeded architectures
-  rm -rf "${pkgdir}"/usr/src/linux-${_kernver}/arch/{alpha,arc,arm,arm26,arm64,avr32,blackfin,c6x,cris,frv,h8300,hexagon,ia64,m32r,m68k,m68knommu,metag,microblaze,mn10300,openrisc,parisc,powerpc,ppc,s390,score,sh,sh64,sparc,sparc64,tile,unicore32,um,v850,x86,xtensa}
+  rm -rf "${pkgdir}"/usr/lib/modules/${_kernver}/build/arch/{alpha,arc,arm,arm26,arm64,avr32,blackfin,c6x,cris,frv,h8300,hexagon,ia64,m32r,m68k,m68knommu,metag,microblaze,mn10300,openrisc,parisc,powerpc,ppc,s390,score,sh,sh64,sparc,sparc64,tile,unicore32,um,v850,x86,xtensa}
 }
 
 _package-docs() {
@@ -340,13 +316,13 @@ _package-docs() {
 
   cd "${srcdir}/${_srcname}"
 
-  mkdir -p "${pkgdir}/usr/src/linux-${_kernver}"
-  cp -al Documentation "${pkgdir}/usr/src/linux-${_kernver}"
+  mkdir -p "${pkgdir}/usr/lib/modules/${_kernver}/build"
+  cp -al Documentation "${pkgdir}/usr/lib/modules/${_kernver}/build"
   find "${pkgdir}" -type f -exec chmod 444 {} \;
   find "${pkgdir}" -type d -exec chmod 755 {} \;
 
   # remove a file already in linux package
-  rm -f "${pkgdir}/usr/src/linux-${_kernver}/Documentation/DocBook/Makefile"
+  rm -f "${pkgdir}/usr/lib/modules/${_kernver}/build/Documentation/DocBook/Makefile"
 }
 
 pkgname=("${pkgbase}" "${pkgbase}-headers" "${pkgbase}-docs")
