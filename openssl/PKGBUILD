@@ -1,30 +1,28 @@
-# $Id: PKGBUILD 203278 2014-01-07 10:02:52Z pierre $
+# $Id: PKGBUILD 214323 2014-06-06 07:30:23Z seblu $
 # Maintainer: Pierre Schmitz <pierre@archlinux.de>
 
 pkgname=openssl
-_ver=1.0.1f
+_ver=1.0.1h
 # use a pacman compatible version scheme
 pkgver=${_ver/[a-z]/.${_ver//[0-9.]/}}
 #pkgver=$_ver
-pkgrel=1.2
+pkgrel=1.1
 pkgdesc='The Open Source toolkit for Secure Sockets Layer and Transport Layer Security'
 arch=('i686' 'x86_64')
 url='https://www.openssl.org'
 license=('custom:BSD')
-depends=('perl')
+depends=('zlib' 'perl')
 optdepends=('ca-certificates')
 options=('!makeflags')
 backup=('etc/ssl/openssl.cnf')
 source=("https://www.openssl.org/source/${pkgname}-${_ver}.tar.gz"
         "https://www.openssl.org/source/${pkgname}-${_ver}.tar.gz.asc"
         'no-rpath.patch'
-        'ca-dir.patch'
-        'openssl-1.0.1f-perl-5.18.patch')
-md5sums=('f26b09c028a0541cab33da697d522b25'
+        'ca-dir.patch')
+md5sums=('8d6d684a9430d5cc98a62a5d8fbda8cf'
          'SKIP'
          'dc78d3d06baffc16217519242ce92478'
-         '3bf51be3a1bbd262be46dc619f92aa90'
-         'ea2a61c8bd43788d81d98f1ac36c98ac')
+         '3bf51be3a1bbd262be46dc619f92aa90')
 
 prepare() {
 	cd $srcdir/$pkgname-$_ver
@@ -33,8 +31,6 @@ prepare() {
 	patch -p0 -i $srcdir/no-rpath.patch
 	# set ca dir to /etc/ssl by default
 	patch -p0 -i $srcdir/ca-dir.patch
-
-	patch -p1 -i $srcdir/openssl-1.0.1f-perl-5.18.patch
 }
 
 build() {
@@ -55,7 +51,7 @@ build() {
 	./Configure --prefix=/usr --openssldir=/etc/ssl --libdir=lib \
 		shared zlib ${optflags} \
 		"${openssltarget}" \
-		-Wa,--noexecstack "${CFLAGS}" "${LDFLAGS}"
+		"-Wa,--noexecstack ${CPPFLAGS} ${CFLAGS} ${LDFLAGS}"
 
 	make depend
 	make
