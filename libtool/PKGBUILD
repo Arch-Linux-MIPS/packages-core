@@ -1,4 +1,4 @@
-# $Id: PKGBUILD 197158 2013-10-23 13:04:23Z allan $
+# $Id: PKGBUILD 211962 2014-05-02 08:39:41Z allan $
 # Maintainer: Allan McRae <allan@archlinux.org>
 # Contributor: judd <jvinet@zeroflux.org>
 
@@ -6,8 +6,8 @@
 
 pkgname=('libtool' 'libltdl')
 pkgver=2.4.2
-_gccver=4.8.2
-pkgrel=12.1
+_gccver=4.9.0
+pkgrel=13.1
 pkgdesc="A generic library support script"
 arch=('i686' 'x86_64')
 url="http://www.gnu.org/software/libtool"
