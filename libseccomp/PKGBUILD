@@ -1,0 +1,34 @@
+# Maintainer: Daniel Micay <danielmicay@gmail.com>
+# Contributor: Patryk Kowalczyk < patryk at kowalczyk dot ws>
+
+pkgname=libseccomp
+pkgver=2.1.1
+pkgrel=1.1
+pkgdesc='Enhanced seccomp library'
+arch=('i686' 'x86_64')
+license=('LGPL2.1')
+url="http://sourceforge.net/projects/libseccomp/"
+depends=('glibc')
+source=("http://downloads.sourceforge.net/project/$pkgname/$pkgname-$pkgver/$pkgname-$pkgver.tar.gz"
+        "0001-arch-Add-support-for-MIPS-Big-Endian.patch"
+        "0002-arch-Add-support-for-MIPS-Little-Endian.patch")
+
+prepare() {
+  cd $pkgname-$pkgver
+  patch -p1 <"$srcdir/0001-arch-Add-support-for-MIPS-Big-Endian.patch"
+  patch -p1 <"$srcdir/0002-arch-Add-support-for-MIPS-Little-Endian.patch"
+}
+
+build() {
+  cd $pkgname-$pkgver
+  ./configure --prefix=/usr
+  make
+}
+
+package() {
+  cd $pkgname-$pkgver
+  make DESTDIR="$pkgdir" install
+}
+md5sums=('1f41207b29e66a7e5e375dd48a64de85'
+         '35c8915cc2b757058d17a755a5404006'
+         '58e2ca568046f107b79177b7324661ca')

@@ -1,0 +1,265 @@
+From f2f1a1a4eb543264e5fc852f664df01a9e79c5f7 Mon Sep 17 00:00:00 2001
+From: Markos Chandras <markos.chandras@imgtec.com>
+Date: Tue, 15 Apr 2014 09:36:36 +0100
+Subject: [PATCH 2/2] arch: Add support for MIPS Little Endian
+
+Add support for MIPS 32-bit (O32 ABI) Little Endian
+
+Signed-off-by: Markos Chandras <markos.chandras@imgtec.com>
+Signed-off-by: Paul Moore <pmoore@redhat.com>
+
+Conflicts:
+	tests/regression
+	tools/scmp_bpf_sim.c
+---
+ include/seccomp.h.in          |  1 +
+ src/arch-mips.c               |  7 +++++++
+ src/arch-mips.h               |  2 ++
+ src/arch.c                    |  8 ++++++++
+ tests/16-sim-arch_basic.c     |  6 ++++++
+ tests/23-sim-arch_all_basic.c |  6 ++++++
+ tests/regression              | 33 ++++++++++++++++++++++++++++-----
+ tools/scmp_arch_detect.c      |  3 +++
+ tools/scmp_bpf_sim.c          |  2 ++
+ tools/scmp_sys_resolver.c     |  2 ++
+ 10 files changed, 65 insertions(+), 5 deletions(-)
+
+diff --git a/include/seccomp.h.in b/include/seccomp.h.in
+index 6d7dece..8fcfc2c 100644
+--- a/include/seccomp.h.in
++++ b/include/seccomp.h.in
+@@ -125,6 +125,7 @@ struct scmp_arg_cmp {
+  * The MIPS architecture token
+  */
+ #define SCMP_ARCH_MIPS		AUDIT_ARCH_MIPS
++#define SCMP_ARCH_MIPSEL	AUDIT_ARCH_MIPSEL
+ 
+ /**
+  * Convert a syscall name into the associated syscall number
+diff --git a/src/arch-mips.c b/src/arch-mips.c
+index af2d67e..7e88929 100644
+--- a/src/arch-mips.c
++++ b/src/arch-mips.c
+@@ -33,3 +33,10 @@ const struct arch_def arch_def_mips = {
+ 	.size = ARCH_SIZE_32,
+ 	.endian = ARCH_ENDIAN_BIG,
+ };
++
++const struct arch_def arch_def_mipsel = {
++	.token = SCMP_ARCH_MIPSEL,
++	.token_bpf = AUDIT_ARCH_MIPSEL,
++	.size = ARCH_SIZE_32,
++	.endian = ARCH_ENDIAN_LITTLE,
++};
+diff --git a/src/arch-mips.h b/src/arch-mips.h
+index ffae4e9..1258c26 100644
+--- a/src/arch-mips.h
++++ b/src/arch-mips.h
+@@ -31,8 +31,10 @@
+ #define mips_arg_count_max		6
+ 
+ extern const struct arch_def arch_def_mips;
++extern const struct arch_def arch_def_mipsel;
+ 
+ #define mips_arg_offset(x)	(offsetof(struct seccomp_data, args[x]) + 4)
++#define mipsel_arg_offset(x)	(offsetof(struct seccomp_data, args[x]))
+ 
+ int mips_syscall_resolve_name(const char *name);
+ const char *mips_syscall_resolve_num(int num);
+diff --git a/src/arch.c b/src/arch.c
+index 1cae657..d2fdbe8 100644
+--- a/src/arch.c
++++ b/src/arch.c
+@@ -49,6 +49,8 @@ const struct arch_def *arch_def_native = &arch_def_x86_64;
+ const struct arch_def *arch_def_native = &arch_def_arm;
+ #elif __MIPSEB__
+ const struct arch_def *arch_def_native = &arch_def_mips;
++#elif __MIPSEL__
++const struct arch_def *arch_def_native = &arch_def_mipsel;
+ #else
+ #error the arch code needs to know about your machine type
+ #endif /* machine type guess */
+@@ -68,6 +70,7 @@ int arch_valid(uint32_t arch)
+ 	case SCMP_ARCH_X32:
+ 	case SCMP_ARCH_ARM:
+ 	case SCMP_ARCH_MIPS:
++	case SCMP_ARCH_MIPSEL:
+ 		return 0;
+ 	}
+ 
+@@ -94,6 +97,8 @@ const struct arch_def *arch_def_lookup(uint32_t token)
+ 		return &arch_def_arm;
+ 	case SCMP_ARCH_MIPS:
+ 		return &arch_def_mips;
++	case SCMP_ARCH_MIPSEL:
++		return &arch_def_mipsel;
+ 	}
+ 
+ 	return NULL;
+@@ -119,6 +124,7 @@ int arch_arg_count_max(const struct arch_def *arch)
+ 	case SCMP_ARCH_ARM:
+ 		return arm_arg_count_max;
+ 	case SCMP_ARCH_MIPS:
++	case SCMP_ARCH_MIPSEL:
+ 		return mips_arg_count_max;
+ 	}
+ 
+@@ -187,6 +193,7 @@ int arch_syscall_resolve_name(const struct arch_def *arch, const char *name)
+ 	case SCMP_ARCH_ARM:
+ 		return arm_syscall_resolve_name(name);
+ 	case SCMP_ARCH_MIPS:
++	case SCMP_ARCH_MIPSEL:
+ 		return mips_syscall_resolve_name(name);
+ 	}
+ 
+@@ -215,6 +222,7 @@ const char *arch_syscall_resolve_num(const struct arch_def *arch, int num)
+ 	case SCMP_ARCH_ARM:
+ 		return arm_syscall_resolve_num(num);
+ 	case SCMP_ARCH_MIPS:
++	case SCMP_ARCH_MIPSEL:
+ 		return mips_syscall_resolve_num(num);
+ 	}
+ 
+diff --git a/tests/16-sim-arch_basic.c b/tests/16-sim-arch_basic.c
+index 5b02cca..ff318b1 100644
+--- a/tests/16-sim-arch_basic.c
++++ b/tests/16-sim-arch_basic.c
+@@ -61,6 +61,12 @@ int main(int argc, char *argv[])
+ 			goto out;
+ 	}
+ 
++	if (seccomp_arch_exist(ctx, SCMP_ARCH_MIPSEL)) {
++		rc = seccomp_arch_add(ctx, SCMP_ARCH_MIPSEL);
++		if (rc != 0)
++			goto out;
++	}
++
+ 	rc = seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(read), 1,
+ 			      SCMP_A0(SCMP_CMP_EQ, STDIN_FILENO));
+ 	if (rc != 0)
+diff --git a/tests/23-sim-arch_all_basic.c b/tests/23-sim-arch_all_basic.c
+index 1b39914..92f3e0e 100644
+--- a/tests/23-sim-arch_all_basic.c
++++ b/tests/23-sim-arch_all_basic.c
+@@ -60,6 +60,12 @@ int main(int argc, char *argv[])
+ 			goto out;
+ 	}
+ 
++	if (seccomp_arch_exist(ctx, SCMP_ARCH_MIPSEL)) {
++		rc = seccomp_arch_add(ctx, SCMP_ARCH_MIPSEL);
++		if (rc != 0)
++			goto out;
++	}
++
+ 	rc = seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(read), 1,
+ 			      SCMP_A0(SCMP_CMP_EQ, STDIN_FILENO));
+ 	if (rc != 0)
+diff --git a/tests/regression b/tests/regression
+index 790d5e1..7dbc87f 100755
+--- a/tests/regression
++++ b/tests/regression
+@@ -21,7 +21,7 @@
+ # along with this library; if not, see <http://www.gnu.org/licenses>.
+ #
+ 
+-GLBL_ARCH_SUPPORT="x86 x86_64 x32 arm"
++GLBL_ARCH_SUPPORT="x86 x86_64 x32 arm mipsel"
+ 
+ GLBL_SYS_ARCH="../tools/scmp_arch_detect"
+ GLBL_SYS_RESOLVER="../tools/scmp_sys_resolver"
+@@ -615,25 +615,48 @@ function run_test_live() {
+ 	rc=$?
+ 	exec 4>&-
+ 
++	# setup the arch specific return values
++	case "$arch" in
++	x86|x86_64|x32|arm)
++		rc_kill=159
++		rc_allow=160
++		rc_trap=161
++		rc_trace=162
++		rc_errno=163
++		;;
++	mipsel)
++		rc_kill=140
++		rc_allow=160
++		rc_trap=161
++		rc_trace=162
++		rc_errno=163
++		;;
++	*)
++		print_result $testnumstr "ERROR" "arch $arch not supported"
++		stats_error=$(($stats_error+1))
++		return
++		;;
++	esac
++
+ 	# return value codes for this test type:
+ 	#  159: KILL
+ 	#  160: ALLOW
+ 	#  161: TRAP
+ 	#  162: TRACE (currently unsupported)
+ 	#  163: ERRNO
+-	if [[ $line_act == "KILL" && $rc -eq 159 ]]; then
++	if [[ $line_act == "KILL" && $rc -eq $rc_kill ]]; then
+ 		print_result $1 "SUCCESS" ""
+ 		stats_success=$(($stats_success+1))
+-	elif [[ $line_act == "ALLOW" && $rc -eq 160 ]]; then
++	elif [[ $line_act == "ALLOW" && $rc -eq $rc_allow ]]; then
+ 		print_result $1 "SUCCESS" ""
+ 		stats_success=$(($stats_success+1))
+-	elif [[ $line_act == "TRAP" && $rc -eq 161 ]]; then
++	elif [[ $line_act == "TRAP" && $rc -eq $rc_trap ]]; then
+ 		print_result $1 "SUCCESS" ""
+ 		stats_success=$(($stats_success+1))
+ 	elif [[ $line_act == "TRACE" ]]; then
+ 		print_result $1 "ERROR" "unsupported action \"$line_act\""
+ 		stats_error=$(($stats_error+1))
+-	elif [[ $line_act == "ERRNO" && $rc -eq 163 ]]; then
++	elif [[ $line_act == "ERRNO" && $rc -eq $rc_errno ]]; then
+ 		print_result $1 "SUCCESS" ""
+ 		stats_success=$(($stats_success+1))
+ 	else
+diff --git a/tools/scmp_arch_detect.c b/tools/scmp_arch_detect.c
+index f562878..02d291b 100644
+--- a/tools/scmp_arch_detect.c
++++ b/tools/scmp_arch_detect.c
+@@ -81,6 +81,9 @@ int main(int argc, char *argv[])
+ 		case SCMP_ARCH_MIPS:
+ 			printf("mips\n");
+ 			break;
++		case SCMP_ARCH_MIPSEL:
++			printf("mipsel\n");
++			break;
+ 		default:
+ 			printf("unknown\n");
+ 		}
+diff --git a/tools/scmp_bpf_sim.c b/tools/scmp_bpf_sim.c
+index 3bc3922..d4c3946 100644
+--- a/tools/scmp_bpf_sim.c
++++ b/tools/scmp_bpf_sim.c
+@@ -241,6 +241,8 @@ int main(int argc, char *argv[])
+ 				sys_data.arch = AUDIT_ARCH_ARM;
+ 			else if (strcmp(optarg, "mips") == 0)
+ 				sys_data.arch = AUDIT_ARCH_MIPS;
++			else if (strcmp(optarg, "mipsel") == 0)
++				sys_data.arch = AUDIT_ARCH_MIPSEL;
+ 			else
+ 				exit_fault(EINVAL);
+ 			break;
+diff --git a/tools/scmp_sys_resolver.c b/tools/scmp_sys_resolver.c
+index c7dcb78..108360f 100644
+--- a/tools/scmp_sys_resolver.c
++++ b/tools/scmp_sys_resolver.c
+@@ -73,6 +73,8 @@ int main(int argc, char *argv[])
+ 				arch = &arch_def_arm;
+ 			else if (strcmp(optarg, "mips") == 0)
+ 				arch = &arch_def_mips;
++			else if (strcmp(optarg, "mipsel") == 0)
++				arch = &arch_def_mipsel;
+ 			else
+ 				exit_usage(argv[0]);
+ 			break;
+-- 
+2.0.1
+
